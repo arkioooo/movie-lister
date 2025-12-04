@@ -1,70 +1,174 @@
-# Getting Started with Create React App
+```markdown
+# TMDB React App (with Firebase Authentication)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A React-based web application that allows users to browse movies and TV shows using the TMDB API.  
+Users can sign up / log in using Firebase Authentication and save favourites and custom lists.
 
-## Available Scripts
+This project is designed to run locally and can be easily cloned from GitHub.  
+Environment variables are required for Firebase and TMDB configuration.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- Browse movies and TV shows (Discover, Search, Details)
+- Firebase Authentication (Email/Password and Google if enabled)
+- User-specific data storage (favourites, lists, etc.) via Firestore
+- Works for both authenticated and guest users
+- Local development + GitHub friendly setup
+- `.env.example` included for easy installation
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## Tech Stack
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- React (Vite or CRA)
+- Firebase Authentication
+- Cloud Firestore
+- TMDB API (read-only)
+- Optional: serverless functions for secure proxying
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Folder Structure (high-level)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```
+/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── context/
+│   ├── hooks/
+│   └── App.js or App.jsx
+├── .env.example
+├── .env.local (NOT committed)
+├── README.md
+├── package.json
+└── docs/ (optional — wireframes, notes)
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## Getting Started (Local Development)
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 1. Clone the repository
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```
+git clone <REPO_URL>
+cd <PROJECT_FOLDER>
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### 2. Install dependencies
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```
+npm install
+```
 
-## Learn More
+### 3. Create your environment file
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Duplicate `.env.example` and name it `.env.local`:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```
+cp .env.example .env.local
+```
 
-### Code Splitting
+Fill `.env.local` with your **Firebase Web App config** and **TMDB API key**.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+> **Never commit `.env.local`** — it contains secrets.
 
-### Analyzing the Bundle Size
+### 4. Start the development server
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+For Create React App:
 
-### Making a Progressive Web App
+```
+npm start
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+For Vite:
 
-### Advanced Configuration
+```
+npm run dev
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+The app will run at:
 
-### Deployment
+[http://localhost:3000](http://localhost:3000)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
+## Firebase Setup (Required)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### 1. Create Firebase project
+
+Go to: <https://console.firebase.google.com/>
+
+### 2. Add a Web App to Firebase
+
+Copy the config values into `.env.local`.
+
+### 3. Enable Authentication providers
+
+Firebase Console → Authentication → Sign-in method  
+
+Enable:
+
+- Email/Password
+- Google (optional)
+
+### 4. Add Authorized Domains
+
+Firebase Console → Authentication → Settings → Authorized domains  
+
+Add:
+
+- `localhost`
+- `localhost:3000`
+
+These are required for Firebase Auth to work locally.
+
+---
+
+## TMDB Setup (Required)
+
+1. Create an account at <https://www.themoviedb.org/>
+2. Go to **API** section and request a developer API key.
+3. Put the key inside `.env.local` under `REACT_APP_TMDB_API_KEY`.
+
+---
+
+## Building for Production (Optional)
+
+```
+npm run build
+```
+
+---
+
+## Environment Variables
+
+These are required (see `.env.example`):
+
+```
+REACT_APP_FIREBASE_API_KEY=
+REACT_APP_FIREBASE_AUTH_DOMAIN=
+REACT_APP_FIREBASE_PROJECT_ID=
+REACT_APP_FIREBASE_STORAGE_BUCKET=
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=
+REACT_APP_FIREBASE_APP_ID=
+REACT_APP_TMDB_API_KEY=
+```
+
+---
+
+## Notes
+
+- Commit `.env.example` but NOT `.env.local`.
+- Firebase config can be public, but TMDB key should ideally be proxied later when you add a backend.
+- Firestore rules should restrict access so each user only reads/writes their own data.
+
+---
+
+## License
+
+MIT License
+```
