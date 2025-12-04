@@ -1,0 +1,119 @@
+// src/api/firestore.js
+import {
+  doc,
+  setDoc,
+  getDoc,
+  collection,
+  addDoc,
+  deleteDoc,
+  updateDoc,
+  query,
+  where,
+  getDocs,
+  serverTimestamp,
+  orderBy,
+} from 'firebase/firestore';
+import { db } from './firebase';
+
+/**
+ * Ensure a minimal user document exists for a signed in user.
+ * Creates users/{uid} if not present.
+ */
+export async function createUserDocIfNotExists(user) {
+  if (!user || !user.uid) return;
+  const userRef = doc(db, 'users', user.uid);
+  const snap = await getDoc(userRef);
+  if (!snap.exists()) {
+    await setDoc(userRef, {
+      displayName: user.displayName || null,
+      email: user.email || null,
+      createdAt: serverTimestamp(),
+    });
+  }
+}
+
+/* ------------------------
+   Favourites helpers
+   ------------------------ */
+
+export async function addFavourite(uid, fav) {
+  // fav: { tmdbId, type: 'movie'|'tv', title?, posterPath? }
+  if (!uid) throw new Error('uid required');
+  const favRef = doc(db, 'users', uid, 'favourites', String(fav.tmdbId));
+  await setDoc(favRef, {
+    tmdbId: fav.tmdbId,
+    type: fav.type,
+    title: fav.title || null,
+    posterPath: fav.posterPath || null,
+    addedAt: serverTimestamp(),
+  });
+}
+
+export async function removeFavourite(uid, tmdbId) {
+  if (!uid) throw new Error('uid required');
+  const favRef = doc(db, 'users', uid, 'favourites', String(tmdbId));
+  await deleteDoc(favRef);
+}
+
+export async function getFavourites(uid) {
+  if (!uid) return [];
+  const favsCol = collection(db, 'users', uid, 'favourites');
+  const snap = await getDocs(favsCol);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+/* ------------------------
+   Lists helpers
+   ------------------------ */
+
+export async function createList(uid, { name, description = '', isPublic = false }) {
+  if (!uid) throw new Error('uid required');
+  const listsCol = collection(db, 'users', uid, 'lists');
+  const docRef = await addDoc(listsCol, {
+    name,
+    description,
+    public: !!isPublic,
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function deleteList(uid, listId) {
+  if (!uid) throw new Error('uid required');
+  const listRef = doc(db, 'users', uid, 'lists', listId);
+  await deleteDoc(listRef);
+}
+
+export async function addItemToList(uid, listId, item) {
+  if (!uid) throw new Error('uid required');
+  const itemsCol = collection(db, 'users', uid, 'lists', listId, 'items');
+  const docRef = await addDoc(itemsCol, {
+    tmdbId: item.tmdbId,
+    note: item.note || null,
+    position: typeof item.position === 'number' ? item.position : null,
+    addedAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function getListItems(uid, listId) {
+  if (!uid) return [];
+  const itemsCol = collection(db, 'users', uid, 'lists', listId, 'items');
+  // orderBy only if position field exists; otherwise will return unsorted
+  try {
+    const q = query(itemsCol, orderBy('position'));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (err) {
+    // fallback to simple getDocs if orderBy fails (no position field)
+    const snap = await getDocs(itemsCol);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+}
+
+export async function getUserLists(uid) {
+  if (!uid) return [];
+  const listsCol = collection(db, 'users', uid, 'lists');
+  const snap = await getDocs(listsCol);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
