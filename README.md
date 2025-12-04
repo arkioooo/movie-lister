@@ -1,4 +1,3 @@
-```markdown
 # TMDB React App (with Firebase Authentication)
 
 A React-based web application that allows users to browse movies and TV shows using the TMDB API.  
@@ -171,4 +170,3 @@ REACT_APP_TMDB_API_KEY=
 ## License
 
 MIT License
-```
