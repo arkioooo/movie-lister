@@ -2,66 +2,87 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { addFavourite, removeFavourite, getFavourites } from '../../api/firestore';
+import { addFavourite, removeFavourite } from '../../api/firestore';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../api/firebase';
 
 export default function AddToFavButton({ tmdbId, type = 'movie', title = '', posterPath = '' }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isFav, setIsFav] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
 
-  // Fetch initial favourite state for signed-in user
   useEffect(() => {
     let mounted = true;
-    async function fetch() {
+    async function check() {
+      setChecking(true);
       if (!user) {
         if (mounted) setIsFav(false);
+        setChecking(false);
         return;
       }
       try {
-        const favs = await getFavourites(user.uid);
-        const found = favs.some((f) => String(f.tmdbId) === String(tmdbId));
-        if (mounted) setIsFav(found);
+        const docRef = doc(db, 'users', user.uid, 'favourites', String(tmdbId));
+        const snap = await getDoc(docRef);
+        if (mounted) setIsFav(snap.exists());
       } catch (e) {
-        console.error('Failed to fetch favourites', e);
+        console.error('Failed to check favourite', e);
+        if (mounted) setIsFav(false);
+      } finally {
+        if (mounted) setChecking(false);
       }
     }
-    fetch();
+    check();
     return () => { mounted = false; };
   }, [user, tmdbId]);
 
   async function handleToggle() {
     if (!user) {
+      // prompt login: navigate to login but preserve current location is optional
       navigate('/login');
       return;
     }
+
+    // optimistic UI
+    const prev = isFav;
+    setIsFav(!prev);
     setLoading(true);
+
     try {
-      if (!isFav) {
+      if (!prev) {
         await addFavourite(user.uid, { tmdbId, type, title, posterPath });
-        setIsFav(true);
       } else {
         await removeFavourite(user.uid, tmdbId);
-        setIsFav(false);
       }
+      // success — do NOT navigate anywhere
     } catch (e) {
       console.error('Fav toggle failed', e);
+      // rollback UI on error
+      setIsFav(prev);
+      // optionally notify user
+      alert('Could not update favourites. Please try again.');
     } finally {
       setLoading(false);
     }
   }
 
+  // while initial check is in progress, show disabled state
   return (
-    <button onClick={handleToggle} disabled={loading} aria-pressed={isFav} style={buttonStyle}>
-      {loading ? '...' : (isFav ? 'Remove from favourites ❤️' : 'Add to favourites ♡')}
+    <button
+      onClick={handleToggle}
+      disabled={loading || checking}
+      aria-pressed={isFav}
+      style={{
+        padding: '8px 12px',
+        borderRadius: 6,
+        border: '1px solid var(--border, #ddd)',
+        background: isFav ? 'var(--color-accent)' : 'transparent',
+        color: isFav ? 'var(--accent-contrast, #fff)' : 'var(--text)',
+        cursor: loading || checking ? 'default' : 'pointer'
+      }}
+    >
+      {checking ? '...' : (loading ? '...' : (isFav ? 'Remove from favourites' : 'Add to favourites'))}
     </button>
   );
 }
-
-const buttonStyle = {
-  padding: '8px 12px',
-  borderRadius: 6,
-  border: '1px solid #ddd',
-  background: '#fff',
-  cursor: 'pointer',
-};

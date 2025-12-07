@@ -8,6 +8,7 @@ import Home from '../pages/Home'; // optional: can render Discover
 import Login from '../pages/Auth/Login';
 import Signup from '../pages/Auth/Signup';
 import { useAuth } from '../hooks/useAuth';
+import Favourites from '../pages/Favourites';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -21,6 +22,7 @@ export default function AppRouter() {
       <Route path="/" element={<Discover />} />
       <Route path="/discover" element={<Discover />} />
       <Route path="/search" element={<Search />} />
+      <Route path="/favourites" element={<Favourites />} />
       <Route path="/movie/:id" element={<MoviePage isTV={false} />} />
       <Route path="/tv/:id" element={<MoviePage isTV={true} />} />
 

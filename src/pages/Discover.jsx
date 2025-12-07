@@ -1,4 +1,3 @@
-// src/pages/Discover.jsx
 import React, { useEffect, useState } from 'react';
 import tmdb from '../api/tmdb';
 import MovieGrid from '../components/movies/MovieGrid';

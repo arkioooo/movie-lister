@@ -2,9 +2,11 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   async function handleLogout() {
@@ -17,24 +19,44 @@ export default function Navbar() {
   }
 
   return (
-    <header style={{ borderBottom: '1px solid #ddd', padding: '0.5rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <div>
-        <Link to="/" style={{ textDecoration: 'none', fontWeight: 'bold' }}>TMDB App</Link>
+    <header className="app-navbar" role="banner">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="brand"><Link to="/" style={{ color: 'inherit' }}>TMDB App</Link></div>
+        <nav className="nav-links" aria-label="Main navigation">
+          <Link to="/discover">Discover</Link>
+          <Link to="/search">Search</Link>
+          {user && <Link to="/favourites">Favourites</Link>}
+        </nav>
       </div>
-      <nav>
-        <Link to="/" style={{ marginRight: 12 }}>Home</Link>
-        {user ? (
-          <>
-            <Link to="/profile" style={{ marginRight: 12 }}>Profile</Link>
-            <button onClick={handleLogout}>Logout</button>
-          </>
-        ) : (
-          <>
-            <Link to="/login" style={{ marginRight: 12 }}>Login</Link>
-            <Link to="/signup">Sign up</Link>
-          </>
-        )}
-      </nav>
+
+      <div className="nav-actions" role="region" aria-label="User actions">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-pressed={theme === 'dark'}
+            aria-label="Toggle theme"
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            <span className="knob" aria-hidden="true" />
+            <span style={{ opacity: 0.95, fontSize: 13 }}>{theme === 'dark' ? 'Dark' : 'Light'}</span>
+          </button>
+
+          {user ? (
+            <>
+              <Link to="/profile" style={{ color: 'inherit' }}>{user.displayName || user.email}</Link>
+              <button onClick={handleLogout} style={{ padding: '6px 10px', borderRadius: 6, border: 'none', cursor: 'pointer' }}>
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login">Login</Link>
+              <Link to="/signup">Sign up</Link>
+            </>
+          )}
+        </div>
+      </div>
     </header>
   );
 }
