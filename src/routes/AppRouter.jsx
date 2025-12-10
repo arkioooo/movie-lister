@@ -1,14 +1,15 @@
 // src/routes/AppRouter.jsx
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import Home from '../pages/Home';
 import Discover from '../pages/Discover';
 import Search from '../pages/Search';
 import MoviePage from '../pages/MoviePage';
-import Home from '../pages/Home'; // optional: can render Discover
 import Login from '../pages/Auth/Login';
 import Signup from '../pages/Auth/Signup';
-import { useAuth } from '../hooks/useAuth';
 import Favourites from '../pages/Favourites';
+import Profile from '../pages/Profile';
+import { useAuth } from '../hooks/useAuth';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -19,10 +20,9 @@ function ProtectedRoute({ children }) {
 export default function AppRouter() {
   return (
     <Routes>
-      <Route path="/" element={<Discover />} />
+      <Route path="/" element={<Home />} />
       <Route path="/discover" element={<Discover />} />
       <Route path="/search" element={<Search />} />
-      <Route path="/favourites" element={<Favourites />} />
       <Route path="/movie/:id" element={<MoviePage isTV={false} />} />
       <Route path="/tv/:id" element={<MoviePage isTV={true} />} />
 
@@ -30,7 +30,15 @@ export default function AppRouter() {
         path="/profile"
         element={
           <ProtectedRoute>
-            <div>Profile page (placeholder) — protected route</div>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/favourites"
+        element={
+          <ProtectedRoute>
+            <Favourites />
           </ProtectedRoute>
         }
       />

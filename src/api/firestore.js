@@ -117,3 +117,23 @@ export async function getUserLists(uid) {
   const snap = await getDocs(listsCol);
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
+
+// Get a user profile document from Firestore
+export async function getUserProfile(uid) {
+  if (!uid) throw new Error('uid required');
+  const userRef = doc(db, 'users', uid);
+  const snap = await getDoc(userRef);
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() };
+}
+
+// Update user profile fields (partial update)
+export async function updateUserProfile(uid, data) {
+  if (!uid) throw new Error('uid required');
+  const userRef = doc(db, 'users', uid);
+  await updateDoc(userRef, {
+    ...data,
+    // do not touch createdAt here
+  });
+}
+

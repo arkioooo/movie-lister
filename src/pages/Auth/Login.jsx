@@ -49,11 +49,17 @@ export default function Login() {
           <label>Password</label><br />
           <input value={password} onChange={e => setPassword(e.target.value)} type="password" required />
         </div>
-        <button type="submit" disabled={loading}>{loading ? 'Logging in...' : 'Login'}</button>
+        <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? 'Logging in...' : 'Login'}
+        </button>
+
       </form>
 
       <div style={{ marginTop: 12 }}>
-        <button onClick={handleGoogle}>Sign in with Google</button>
+        <button type="button" className="btn btn-secondary" onClick={handleGoogle}>
+          Sign in with Google
+        </button>
+
       </div>
 
       <p style={{ marginTop: 12 }}>

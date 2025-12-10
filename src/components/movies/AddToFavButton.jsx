@@ -73,14 +73,7 @@ export default function AddToFavButton({ tmdbId, type = 'movie', title = '', pos
       onClick={handleToggle}
       disabled={loading || checking}
       aria-pressed={isFav}
-      style={{
-        padding: '8px 12px',
-        borderRadius: 6,
-        border: '1px solid var(--border, #ddd)',
-        background: isFav ? 'var(--color-accent)' : 'transparent',
-        color: isFav ? 'var(--accent-contrast, #fff)' : 'var(--text)',
-        cursor: loading || checking ? 'default' : 'pointer'
-      }}
+      className={`btn btn-small ${isFav ? 'btn-primary' : 'btn-secondary'}`}
     >
       {checking ? '...' : (loading ? '...' : (isFav ? 'Remove from favourites' : 'Add to favourites'))}
     </button>

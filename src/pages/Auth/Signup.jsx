@@ -46,7 +46,10 @@ export default function Signup() {
           <label>Confirm password</label><br />
           <input value={confirm} onChange={e => setConfirm(e.target.value)} type="password" required />
         </div>
-        <button type="submit" disabled={loading}>{loading ? 'Creating...' : 'Create account'}</button>
+        <button type="submit" className="btn btn-primary" disabled={loading}>
+          {loading ? 'Creating...' : 'Create account'}
+        </button>
+
       </form>
 
       <p style={{ marginTop: 12 }}>

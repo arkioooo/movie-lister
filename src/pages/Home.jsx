@@ -1,27 +1,29 @@
 // src/pages/Home.jsx
 import React from 'react';
-import useAuth from '../hooks/useAuth';
-import { Link } from 'react-router-dom';
+import Discover from './Discover';
 
 export default function Home() {
-  const { user, loading } = useAuth();
-
-  if (loading) return <div>Loading authentication...</div>;
-
   return (
-    <div>
-      <h1>Welcome to the TMDB React App</h1>
-      {user ? (
-        <div>
-          <p>Signed in as <strong>{user.email || user.displayName}</strong></p>
-          <p><Link to="/profile">Go to your profile</Link></p>
+    <div className="home-page">
+      {/* Hero section */}
+      <section className="hero-section">
+        <div className="hero-inner">
+          <h1 className="hero-title">Find your next favourite movie or show.</h1>
+          <p className="hero-body">
+            Browse trending titles, build personal lists, and get tailored picks using data from TMDB.
+            Sign in to save favourites, or explore as a guest.
+          </p>
+          <div className="hero-actions">
+            <a href="#discover-section" className="hero-button-primary">Start discovering</a>
+            <a href="/favourites" className="hero-button-secondary">View favourites</a>
+          </div>
         </div>
-      ) : (
-        <div>
-          <p>You are browsing as a guest.</p>
-          <p><Link to="/login">Login</Link> or <Link to="/signup">Sign up</Link> to save favourites & lists.</p>
-        </div>
-      )}
+      </section>
+
+      {/* Discover section reusing existing Discover page logic */}
+      <section id="discover-section" className="section-discover">
+        <Discover />
+      </section>
     </div>
   );
 }
