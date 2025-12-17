@@ -1,15 +1,55 @@
 // src/hooks/useAuth.js
+import {
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+} from 'firebase/auth';
+import { auth } from '../api/firebase';
 import { useAuth as useAuthContext } from '../context/AuthContext';
 
 /**
- * Provide both a named export and a default export so imports like:
- *   import useAuth from '../hooks/useAuth';
+ * Named export
  *   import { useAuth } from '../hooks/useAuth';
- * both work.
  */
-
 export function useAuth() {
   return useAuthContext();
 }
 
-export default useAuth;
+/**
+ * Default export
+ *   import useAuth from '../hooks/useAuth';
+ */
+export default function useAuthDefault() {
+  const {
+    user,
+    loading,
+    login,
+    signup,
+    logout,
+    signInWithGoogle,
+  } = useAuthContext();
+
+  async function changePassword(currentPassword, newPassword) {
+    if (!auth.currentUser || !auth.currentUser.email) {
+      throw new Error('No authenticated user');
+    }
+
+    const credential = EmailAuthProvider.credential(
+      auth.currentUser.email,
+      currentPassword
+    );
+
+    await reauthenticateWithCredential(auth.currentUser, credential);
+    await updatePassword(auth.currentUser, newPassword);
+  }
+
+  return {
+    user,
+    loading,
+    login,
+    signup,
+    logout,
+    signInWithGoogle,
+    changePassword,
+  };
+}

@@ -21,13 +21,22 @@ import { db } from './firebase';
  */
 export async function createUserDocIfNotExists(user) {
   if (!user || !user.uid) return;
+
   const userRef = doc(db, 'users', user.uid);
   const snap = await getDoc(userRef);
+
   if (!snap.exists()) {
     await setDoc(userRef, {
-      displayName: user.displayName || null,
+      username: user.displayName || user.email?.split('@')[0] || '',
       email: user.email || null,
+      photoURL: user.photoURL || null,
+
+      // Preferences (defaults)
+      allowAdult: false,
+      language: 'en-US',
+
       createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     });
   }
 }
@@ -136,4 +145,3 @@ export async function updateUserProfile(uid, data) {
     // do not touch createdAt here
   });
 }
-

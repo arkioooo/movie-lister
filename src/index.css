@@ -1,16 +1,15 @@
 :root,
 .theme-light {
-  /* Base palette */
   --color-strong: #1B262C;
   --color-primary: #0F4C75;
   --color-accent: #3282B8;
   --color-soft: #BBE1FA;
 
   /* UI roles */
-  --bg: #f7f9fc;                 /* page background */
-  --surface: #ffffff;           /* cards, navbar, inputs */
-  --text: #1B262C;              /* MAIN TEXT (dark & readable) */
-  --muted: #4b5563;             /* secondary text */
+  --bg: #f7f9fc;
+  --surface: #ffffff;
+  --text: #1B262C;
+  --muted: #4b5563;
   --border: #dbe4f0;
   --shadow: 0 6px 18px rgba(15, 76, 117, 0.10);
 
@@ -22,7 +21,6 @@
 }
 
 .theme-dark {
-  /* Base palette (same colors, different meaning) */
   --color-strong: #1B262C;
   --color-primary: #0F4C75;
   --color-accent: #3282B8;
@@ -31,7 +29,7 @@
   /* UI roles */
   --bg: #0b1215;
   --surface: #0f1a1f;
-  --text: #e6f0f8;              /* MAIN TEXT (bright & readable) */
+  --text: #e6f0f8;
   --muted: #9fb3c8;
   --border: rgba(255, 255, 255, 0.08);
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
@@ -46,6 +44,7 @@
 html{
   scroll-behavior: smooth;
 }
+
 body {
   background: var(--bg);
   color: var(--text);
@@ -65,7 +64,6 @@ a {
   padding: 1rem;
 }
 
-/* Card surface */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -76,30 +74,46 @@ a {
 }
 
 /* Navbar base */
-/* Full-width floating shadow */
-.floating-header-wrapper {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 60;
-  display: flex;
-  justify-content: center;
-  padding: 5px 0;
+.theme-dark .floating-header-scrolled {
+  background: linear-gradient(to bottom, #000000 0%, #000000 80%, rgba(0, 0, 0, 0) 100%);
+}
+.theme-dark .floating-header-scrolled .nav-shell,
+.theme-dark .floating-header-scrolled .theme-toggle-pill,
+.theme-dark .floating-header-scrolled .account-bubble {
   background: transparent;
-  transition: background 0.25s ease, box-shadow 0.25s ease;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.theme-dark .floating-header-scrolled .nav-links a,
+.theme-dark .floating-header-scrolled .nav-brand a {
+  color: #ffffff;
 }
 
-.floating-header {
-  width: min(1100px, 100% - 24px);
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
+.floating-header-scrolled .nav-links a:hover {
+  color: var(--color-accent);
+}
+
+.theme-light .floating-header-scrolled {
+  background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0.96) 85%, rgba(255,255,255,0) 100%);
+}
+.theme-light .floating-header-scrolled .nav-shell,
+.theme-light .floating-header-scrolled .theme-toggle-pill,
+.theme-light .floating-header-scrolled .account-bubble {
+  background: transparent;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+.theme-light .floating-header-scrolled .nav-links a,
+.theme-light .floating-header-scrolled .nav-brand a {
+  color: var(--text);
+}
+
+.theme-dark .floating-header-scrolled ~ .app-main .app-footer {
+  border-top-color: rgba(255,255,255,0.06);
+}
+.theme-light .floating-header-scrolled ~ .app-main .app-footer {
+  border-top-color: rgba(0,0,0,0.06);
   gap: 12px;
 }
-.floating-header-scrolled {
-  background: linear-gradient(to bottom, #000000fa 0%, #000000fa 75%, rgba(0, 0, 0, 0) 100%);
-}
+
 .floating-header-scrolled .nav-shell,
 .floating-header-scrolled .theme-toggle-pill,
 .floating-header-scrolled .account-bubble {
@@ -114,8 +128,7 @@ a {
 
 .floating-header-scrolled .nav-links a:hover {
   color: var(--color-accent);
-}
-
+} */
 
 .app-navbar {
   display: flex;
@@ -163,7 +176,6 @@ a {
   font-size: 13px;
 }
 
-/* Toggle knob appearance (simple) */
 .theme-toggle .knob {
   width: 16px;
   height: 16px;
@@ -173,7 +185,6 @@ a {
   transition: transform .2s ease, background .2s ease;
 }
 
-/* Show different knob color in light mode */
 .theme-light .theme-toggle .knob {
   background: var(--color-strong);
 }
@@ -187,7 +198,7 @@ a {
 
 .app-main {
   flex: 1;
-  padding-top: 96px; /* space for floating header */
+  padding-top: 96px;
 }
 
 /* --- Floating header + navbar --- */
@@ -199,7 +210,7 @@ a {
   z-index: 50;
   display: flex;
   justify-content: center;
-  pointer-events: none; /* children regain pointer-events */
+  pointer-events: none;
 }
 
 .floating-header {
@@ -252,12 +263,12 @@ a {
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 7px;        /* ✅ this controls the spacing between links */
+  gap: 7px;
   font-size: 14px;
 }
 
 .nav-links a {
-  padding: 2px 1px;   /* ✅ adds breathing room to each link */
+  padding: 2px 1px;
   color: var(--muted);
   transition: color 0.15s ease, transform 0.1s ease;
 }
@@ -294,42 +305,115 @@ a {
 }
 
 /* Account bubble (right) */
+
+/* Container */
 .account-bubble {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  box-shadow: var(--card-shadow);
+  gap: 8px;
 }
 
+/* Guest buttons */
+.account-bubble-guest .btn {
+  padding-inline: 10px;
+}
+
+/* Auth bubble wrapper */
+.account-bubble-auth {
+  position: relative;
+}
+
+/* Circular button */
 .account-inner {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  gap: 8px;
+  height: 40px;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.14s ease, box-shadow 0.14s ease, transform 0.06s ease;
+  box-shadow: var(--card-shadow);
+  min-width: 44px;
+}
+
+.account-inner.open {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.18);
+}
+
+/* initial letter */
+.account-initial {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
   background: var(--color-primary);
   color: #fff;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.account-bubble-guest .account-inner,
-.account-bubble-guest {
-  background: transparent;
-  border-style: dashed;
-}
-
-.account-logout {
-  border: none;
-  background: transparent;
-  cursor: pointer;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 14px;
-  padding: 0 4px;
+}
+
+/* Dropdown card (initial hidden) */
+.account-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  min-width: 170px;
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.28);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 120;
+
+  /* Hidden state */
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  transform-origin: top right;
+  pointer-events: none;
+  transition: opacity 0.18s cubic-bezier(.2,.9,.2,1), transform 0.18s cubic-bezier(.2,.9,.2,1);
+}
+
+/* Show (visible) state when .show is set by JS */
+.account-dropdown.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* Dropdown items */
+.account-dropdown-item {
+  background: transparent;
+  border: none;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text);
+  font: inherit;
+}
+
+.account-dropdown-item:hover,
+.account-dropdown-item:focus {
+  background: rgba(50,130,184,0.08);
+  outline: none;
+}
+
+/* Accessibility focus style */
+.account-dropdown-item:focus-visible {
+  box-shadow: 0 0 0 3px rgba(50,130,184,0.18);
+  border-radius: 8px;
 }
 
 /* --- Hero section --- */
@@ -409,6 +493,7 @@ a {
 .footer-credit a {
   text-decoration: underline;
 }
+
 /* --- Buttons --- */
 .btn {
   display: inline-flex;
@@ -468,7 +553,7 @@ a {
 }
 
 .btn-small {
-  padding: 6px 12px;
+  padding: 6px 8px;
   font-size: 13px;
 }
 
@@ -486,7 +571,7 @@ a {
 
 .input,
 .select {
-  width: 100%;
+  width: 80%;
   padding: 9px 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
@@ -546,8 +631,8 @@ a {
   display: grid;
   gap: 16px;
 }
-/* ==== Discover layout ==== */
 
+/* ==== Discover layout ==== */
 .discover-header {
   display: flex;
   align-items: flex-start;
@@ -580,8 +665,29 @@ a {
   width: 150px;
 }
 
-/* ===== Floating footer layout ===== */
+.avatar-img {
+  object-fit: cover;
+}
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-card {
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 24px;
+  width: min(420px, 100%);
+  box-shadow: var(--shadow);
+}
+
+/* ===== Floating footer layout ===== */
 .footer-wrap {
   padding: 32px 16px 24px;
 }
@@ -591,7 +697,6 @@ a {
   margin: 0 auto;
 }
 
-/* Main floating card */
 .footer-card {
   position: relative;
   overflow: hidden;
@@ -606,7 +711,6 @@ a {
   width: 100%;
 }
 
-/* Brand + socials + email */
 .footer-left {
   display: flex;
   flex-direction: column;
@@ -615,7 +719,6 @@ a {
 
 .footer-brand {
   font-weight: 700;
-  letter-spacing: 0.12em;
   font-size: 16px;
   text-transform: uppercase;
 }
@@ -625,7 +728,6 @@ a {
   gap: 8px;
 }
 
-/* Simple circular placeholders for icons */
 .social-pill {
   width: 28px;
   height: 28px;
@@ -645,16 +747,28 @@ a {
   width: 14px;
   height: 14px;
   display: block;
-  filter: brightness(0.95);
 }
 
-.social-pill:hover {
+.theme-light .social-pill {
+  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text);
+}
+.theme-light .social-pill:hover {
   background: var(--color-accent);
   color: #ffffff;
-  transition: background 0.18s ease, color 0.18s ease;
 }
 
-/* Email pill */
+.theme-dark .social-pill {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: transparent;
+  color: var(--text);
+}
+.theme-dark .social-pill:hover {
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
 .footer-contact {
   margin-top: 8px;
   display: flex;
@@ -667,7 +781,7 @@ a {
 }
 
 .theme-light .footer-contact {
-  background: var(--color-strong); /* dark pill also works in light mode */
+  background: var(--color-strong);
 }
 
 .footer-email-input {
@@ -693,7 +807,6 @@ a {
   color: #111827;
 }
 
-/* Right side: company section */
 .footer-right {
   display: flex;
   flex-direction: column;
@@ -722,7 +835,6 @@ a {
   color: var(--color-accent);
 }
 
-/* Bottom divider inside card */
 .footer-divider {
   position: absolute;
   left: 24px;
@@ -737,10 +849,257 @@ a {
   background: rgba(0, 0, 0, 0.22);
 }
 
-/* Responsive tweak */
+/* ===== Profile Dashboard ===== */
+
+.profile-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.profile-header h1 {
+  margin-bottom: 4px;
+}
+
+.profile-subtitle {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Card */
+.profile-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+/* Card header with action */
+.profile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+/* Account section */
+.profile-account {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 24px;
+}
+
+.profile-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 28px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Fields */
+.profile-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Preferences */
+.profile-preferences {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.preference-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.theme-light .preference-item {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.preference-title {
+  font-weight: 500;
+}
+
+.preference-desc {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Quick links */
+.profile-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.profile-link-card {
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(50, 130, 184, 0.12);
+  text-align: center;
+  font-weight: 500;
+}
+
+.profile-link-card:hover {
+  background: rgba(50, 130, 184, 0.2);
+}
+
+/* Lists placeholder */
+.profile-lists-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .profile-account {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Button loading animation ===== */
+
+.btn-loading {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.btn-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #ffffff;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== Auth Layout ===== */
+
+.auth-page {
+  min-height: calc(100vh - 120px); /* accounts for navbar/footer */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.auth-card {
+  width: min(920px, 100%);
+  min-height: 420px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-radius: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+/* Left: form */
+.auth-form {
+  padding: 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}
+
+.auth-title {
+  font-size: 24px;
+  margin: 0;
+}
+
+/* Right: image / visual */
+.auth-visual {
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-accent)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.auth-visual-inner {
+  padding: 32px;
+  text-align: center;
+  max-width: 320px;
+}
+
+.auth-visual h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.auth-visual p {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* Footer links inside auth */
+.auth-alt {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Screen size adjustments */
+
 @media (max-width: 768px) {
   .footer-card {
     grid-template-columns: 1fr;
     padding-bottom: 36px;
+  }
+}
+
+@media (max-width: 520px) {
+  .account-inner { padding: 6px 8px; min-width: 40px; }
+  .account-initial { width: 24px; height: 24px; font-size: 13px; }
+  .account-dropdown { right: -6px; min-width: 150px; }
+}
+
+@media (max-width: 768px) {
+  .auth-card {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-visual {
+    display: none;
+  }
+
+  .auth-form {
+    padding: 28px;
   }
 }

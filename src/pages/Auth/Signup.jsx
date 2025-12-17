@@ -1,60 +1,104 @@
 // src/pages/Auth/Signup.jsx
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 
 export default function Signup() {
-  const { signup } = useAuth();
+  const { signup, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
-  const [err, setErr] = useState(null);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [error, setError] = useState(null);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setErr(null);
-    if (password !== confirm) {
-      setErr('Passwords do not match');
-      return;
-    }
+    setError(null);
     setLoading(true);
     try {
       await signup(email, password);
       navigate('/');
-    } catch (error) {
-      setErr(error.message || 'Failed to create account');
+    } catch (err) {
+      setError(err.message || 'Signup failed');
+    } finally {
       setLoading(false);
     }
   }
 
+  async function handleGoogle() {
+    try {
+      await signInWithGoogle();
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Google sign-in failed');
+    }
+  }
+
   return (
-    <div style={{ maxWidth: 420, margin: '2rem auto' }}>
-      <h2>Sign up</h2>
-      {err && <div style={{ color: 'red' }}>{err}</div>}
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: 8 }}>
-          <label>Email</label><br />
-          <input value={email} onChange={e => setEmail(e.target.value)} type="email" required />
-        </div>
-        <div style={{ marginBottom: 8 }}>
-          <label>Password</label><br />
-          <input value={password} onChange={e => setPassword(e.target.value)} type="password" required />
-        </div>
-        <div style={{ marginBottom: 8 }}>
-          <label>Confirm password</label><br />
-          <input value={confirm} onChange={e => setConfirm(e.target.value)} type="password" required />
-        </div>
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? 'Creating...' : 'Create account'}
-        </button>
+    <div className="auth-page">
+      <div className="auth-card">
+        {/* Form */}
+        <div className="auth-form">
+          <h2 className="auth-title">Create an account</h2>
 
-      </form>
+          {error && <div style={{ color: 'red' }}>{error}</div>}
 
-      <p style={{ marginTop: 12 }}>
-        Already have an account? <Link to="/login">Login</Link>
-      </p>
+          <form onSubmit={handleSubmit}>
+            <div className="field-group">
+              <label className="field-label">Email</label>
+              <input
+                className="input"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="field-group">
+              <label className="field-label">Password</label>
+              <input
+                className="input"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading}
+              style={{ width: '100%' }}
+            >
+              {loading ? 'Creating...' : 'Sign up'}
+            </button>
+          </form>
+
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={handleGoogle}
+          >
+            Sign up with Google
+          </button>
+
+          <div className="auth-alt">
+            Already have an account? <Link to="/login">Log in</Link>
+          </div>
+        </div>
+
+        {/* Visual */}
+        <div className="auth-visual">
+          <div className="auth-visual-inner">
+            <h3>Discover more</h3>
+            <p>
+              Track favourites, explore trending titles, and personalise your experience.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

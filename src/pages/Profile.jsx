@@ -1,169 +1,261 @@
-// src/pages/Profile.jsx
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { Link } from 'react-router-dom';
 import { getUserProfile, updateUserProfile } from '../api/firestore';
-
-const LANGUAGE_OPTIONS = [
-  { code: 'en', label: 'English' },
-  { code: 'hi', label: 'Hindi' },
-  { code: 'es', label: 'Spanish' },
-  { code: 'fr', label: 'French' },
-];
+import { uploadUserAvatar } from '../api/storage';
+import useAuth from '../hooks/useAuth';
+import Modal from '../components/common/Modal';
+import ChangePasswordForm from '../components/profile/ChangePasswordForm';
 
 export default function Profile() {
-  const { user, loading: authLoading } = useAuth();
-  const [profile, setProfile] = useState(null);
-  const [form, setForm] = useState({
-    displayName: '',
-    preferredType: 'movie',
-    preferredLanguage: 'en',
-  });
+  const { user } = useAuth();
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [err, setErr] = useState(null);
-  const [saved, setSaved] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+
+  const [initialUsername, setInitialUsername] = useState('');
+  const [username, setUsername] = useState('');
+
+  const [profile, setProfile] = useState({
+    allowAdult: false,
+    language: 'en-US',
+    photoURL: null,
+  });
 
   useEffect(() => {
-    let mounted = true;
-    async function load() {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      setErr(null);
+    async function loadProfile() {
+      if (!user) return;
+
       try {
-        const prof = await getUserProfile(user.uid);
-        if (!mounted) return;
-        setProfile(prof);
-        setForm({
-          displayName: (prof && prof.displayName) || user.displayName || '',
-          preferredType: (prof && prof.preferredType) || 'movie',
-          preferredLanguage: (prof && prof.preferredLanguage) || 'en',
+        const data = await getUserProfile(user.uid);
+        const uname = data?.username || '';
+
+        setInitialUsername(uname);
+        setUsername(uname);
+
+        setProfile({
+          allowAdult: data?.allowAdult ?? false,
+          language: data?.language || 'en-US',
+          photoURL: data?.photoURL || null,
         });
-      } catch (e) {
-        if (!mounted) return;
-        console.error('Failed to load profile', e);
-        setErr('Failed to load profile');
+      } catch (err) {
+        console.error('Failed to load profile', err);
       } finally {
-        if (mounted) setLoading(false);
+        setLoading(false);
       }
     }
-    if (!authLoading) load();
-    return () => { mounted = false; };
-  }, [user, authLoading]);
 
-  function handleChange(e) {
-    const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
-    setSaved(false);
-  }
+    loadProfile();
+  }, [user]);
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleSave() {
     if (!user) return;
+
     setSaving(true);
-    setErr(null);
-    setSaved(false);
     try {
       await updateUserProfile(user.uid, {
-        displayName: form.displayName || null,
-        preferredType: form.preferredType,
-        preferredLanguage: form.preferredLanguage,
+        username: username.trim(),
+        allowAdult: profile.allowAdult,
+        language: profile.language,
+        updatedAt: new Date(),
       });
-      setSaved(true);
-    } catch (e) {
-      console.error('Failed to save profile', e);
-      setErr('Failed to save profile');
+      setInitialUsername(username.trim());
+    } catch (err) {
+      console.error('Failed to update profile', err);
     } finally {
       setSaving(false);
     }
   }
 
-  if (authLoading || loading) {
-    return <div style={{ padding: 20 }}>Loading profile...</div>;
+  async function handleAvatarChange(e) {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setAvatarUploading(true);
+    try {
+      const url = await uploadUserAvatar(user.uid, file);
+      await updateUserProfile(user.uid, { photoURL: url });
+      setProfile((prev) => ({ ...prev, photoURL: url }));
+    } catch (err) {
+      console.error('Avatar upload failed', err);
+    } finally {
+      setAvatarUploading(false);
+    }
   }
 
-  if (!user) {
+  if (loading) {
     return (
-      <div style={{ padding: 20 }}>
-        Please <a href="/login">log in</a> to view your profile.
+      <div className="container">
+        <div className="profile-card">Loading profile…</div>
       </div>
     );
   }
 
-  const createdAt = profile && profile.createdAt && profile.createdAt.toDate
-    ? profile.createdAt.toDate().toLocaleDateString()
-    : null;
+  if (!user) {
+    return (
+      <div className="container">
+        <div className="profile-card">You must be logged in.</div>
+      </div>
+    );
+  }
+
+  const hasChanges = username.trim() !== initialUsername;
 
   return (
-    <div className="profile-layout">
-      <div className="card-elevated">
-        <div className="card-section-title">Account</div>
-        <p><strong>Email:</strong> {user.email}</p>
-        <p><strong>User ID:</strong> {user.uid}</p>
-        {createdAt && <p><strong>Joined:</strong> {createdAt}</p>}
+    <div className="profile-page container">
+      {/* Header */}
+      <div className="profile-header">
+        <h1>Profile</h1>
+        <p className="profile-subtitle">
+          Manage your account, preferences, and activity
+        </p>
       </div>
 
-      <div className="card-elevated">
-        <div className="card-section-title">Preferences</div>
+      {/* ===== Account ===== */}
+      <section className="profile-card">
+        <div className="profile-card-header">
+          <h2>Account</h2>
+          <button
+            className="btn btn-primary btn-small"
+            onClick={handleSave}
+            disabled={!hasChanges || saving}
+          >
+            {saving ? 'Saving…' : 'Save changes'}
+          </button>
+        </div>
 
-        {err && <div style={{ color: 'red', marginBottom: 8 }}>{err}</div>}
-        {saved && <div style={{ color: 'green', marginBottom: 8 }}>Profile updated.</div>}
+        <div className="profile-account">
+          {/* Avatar */}
+          <div className="profile-avatar">
+            {profile.photoURL ? (
+              <img
+                src={profile.photoURL}
+                alt="Avatar"
+                className="avatar-circle avatar-img"
+              />
+            ) : (
+              <div className="avatar-circle">
+                {(username || user.email)[0]?.toUpperCase()}
+              </div>
+            )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="field-group">
-            <label className="field-label" htmlFor="displayName">
-              Display name
+            <label className="btn btn-secondary btn-small">
+              {avatarUploading ? 'Uploading…' : 'Change avatar'}
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={handleAvatarChange}
+                disabled={avatarUploading}
+              />
             </label>
+          </div>
+
+          {/* Fields */}
+          <div className="profile-fields">
+            <div className="field-group">
+              <label className="field-label">Username</label>
+              <input
+                className="input"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                maxLength={24}
+                placeholder="Your username"
+              />
+            </div>
+
+            <div className="field-group">
+              <label className="field-label">Email</label>
+              <input className="input" value={user.email} disabled />
+            </div>
+
+            <button
+              className="btn btn-secondary btn-small"
+              onClick={() => setShowPasswordModal(true)}
+            >
+              Change password
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== Preferences ===== */}
+      <section className="profile-card">
+        <h2>Preferences</h2>
+
+        <div className="profile-preferences">
+          <div className="preference-item">
+            <div>
+              <div className="preference-title">Age-restricted content</div>
+              <div className="preference-desc">
+                Allow movies and shows rated for adults
+              </div>
+            </div>
             <input
-              id="displayName"
-              type="text"
-              name="displayName"
-              className="input"
-              value={form.displayName}
-              onChange={handleChange}
+              type="checkbox"
+              checked={profile.allowAdult}
+              onChange={(e) =>
+                setProfile((p) => ({ ...p, allowAdult: e.target.checked }))
+              }
             />
           </div>
 
-          <div className="field-group">
-            <label className="field-label" htmlFor="preferredType">
-              Preferred type
-            </label>
+          <div className="preference-item">
+            <div>
+              <div className="preference-title">Preferred language</div>
+              <div className="preference-desc">
+                Used for movie titles and descriptions
+              </div>
+            </div>
             <select
-              id="preferredType"
-              name="preferredType"
               className="select"
-              value={form.preferredType}
-              onChange={handleChange}
+              value={profile.language}
+              onChange={(e) =>
+                setProfile((p) => ({ ...p, language: e.target.value }))
+              }
             >
-              <option value="movie">Movies</option>
-              <option value="tv">TV shows</option>
+              <option value="en-US">English (US)</option>
+              <option value="hi-IN">Hindi</option>
+              <option value="fr-FR">French</option>
             </select>
           </div>
+        </div>
+      </section>
 
-          <div className="field-group">
-            <label className="field-label" htmlFor="preferredLanguage">
-              Preferred language
-            </label>
-            <select
-              id="preferredLanguage"
-              name="preferredLanguage"
-              className="select"
-              value={form.preferredLanguage}
-              onChange={handleChange}
-            >
-              {LANGUAGE_OPTIONS.map((opt) => (
-                <option key={opt.code} value={opt.code}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
+      {/* ===== Quick links ===== */}
+      <section className="profile-card">
+        <h2>Quick access</h2>
+        <div className="profile-links">
+          <Link to="/favourites" className="profile-link-card">
+            Favourites
+          </Link>
+          <Link to="/lists" className="profile-link-card">
+            My Lists
+          </Link>
+        </div>
+      </section>
 
-          <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? 'Saving...' : 'Save changes'}
+      {/* ===== Lists placeholder ===== */}
+      <section className="profile-card">
+        <h2>Your lists</h2>
+        <div className="profile-lists-placeholder">
+          <p>You haven’t created any lists yet.</p>
+          <button className="btn btn-secondary" disabled>
+            Create list
           </button>
-        </form>
-      </div>
+        </div>
+      </section>
+
+      {/* ===== Change Password Modal ===== */}
+      <Modal
+        open={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+      >
+        <ChangePasswordForm
+          onClose={() => setShowPasswordModal(false)}
+        />
+      </Modal>
     </div>
   );
 }

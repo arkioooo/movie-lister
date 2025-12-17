@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import tmdb from '../api/tmdb';
 import MovieGrid from '../components/movies/MovieGrid';
+import useUserPreferences from '../hooks/useUserPreferences';
+
 
 export default function Search() {
   const [q, setQ] = useState('');
@@ -10,6 +12,8 @@ export default function Search() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { prefs } = useUserPreferences();
+
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -20,7 +24,7 @@ export default function Search() {
       }
       setLoading(true);
       setError(null);
-      tmdb.search(q.trim(), page, type)
+      tmdb.search(q.trim(), page, type, {allowAdult: prefs.allowAdult, language: prefs.language})
         .then((data) => setResults(data))
         .catch((err) => setError(err.message || 'Search failed'))
         .finally(() => setLoading(false));

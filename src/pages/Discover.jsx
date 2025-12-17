@@ -2,6 +2,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import tmdb from '../api/tmdb';
 import MovieGrid from '../components/movies/MovieGrid';
+import useUserPreferences from '../hooks/useUserPreferences';
+
 
 export default function Discover() {
   const [page, setPage] = useState(1);
@@ -9,7 +11,7 @@ export default function Discover() {
   const [err, setErr] = useState(null);
   const [rawMovie, setRawMovie] = useState(null);
   const [rawTv, setRawTv] = useState(null);
-
+  const { prefs } = useUserPreferences();
   // Filters
   const [query, setQuery] = useState('');
   const [type, setType] = useState('all'); // 'all' | 'movie' | 'tv'
@@ -24,7 +26,7 @@ export default function Discover() {
 
         if (type === 'all' || type === 'movie') {
           promises.push(
-            tmdb.discover('movie', page, { sort_by: 'popularity.desc' }).then((res) => ({
+            tmdb.discover('movie', page, { sort_by: 'popularity.desc', allowAdult: prefs.allowAdult, language: prefs.language}).then((res) => ({
               kind: 'movie',
               data: res,
             }))
@@ -118,7 +120,7 @@ export default function Discover() {
       <form onSubmit={handleSearchSubmit} className="discover-controls">
         <input
           className="input discover-search-input"
-          placeholder="Search within discover results..."
+          placeholder="Search..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
