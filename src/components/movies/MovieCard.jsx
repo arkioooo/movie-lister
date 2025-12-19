@@ -2,6 +2,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import tmdb from '../../api/tmdb';
+import useAuth from '../../hooks/useAuth';
+
 
 export default function MovieCard({ item }) {
   // TMDB search/multi returns different keys: title/name, poster_path, media_type
@@ -9,8 +11,10 @@ export default function MovieCard({ item }) {
   const type = item.media_type || (item.title ? 'movie' : 'tv');
   const title = item.title || item.name;
   const poster = item.poster_path || item.posterPath || item.backdrop_path;
+  const { user } = useAuth();
 
   return (
+    
     <div style={cardStyle}>
       <Link to={`/${type}/${id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
         <div style={{ height: 280, marginBottom: 8, overflow: 'hidden', borderRadius: 6 }}>
@@ -32,6 +36,8 @@ export default function MovieCard({ item }) {
           </div>
         </div>
       </Link>
+
+      {/* Add-to-list moved to MoviePage; button intentionally omitted here */}
     </div>
   );
 }

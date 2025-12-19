@@ -1,5 +1,5 @@
 // src/pages/Discover.jsx
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import tmdb from '../api/tmdb';
 import MovieGrid from '../components/movies/MovieGrid';
 import useUserPreferences from '../hooks/useUserPreferences';
@@ -12,12 +12,64 @@ export default function Discover() {
   const [rawMovie, setRawMovie] = useState(null);
   const [rawTv, setRawTv] = useState(null);
   const { prefs } = useUserPreferences();
+  
   // Filters
   const [query, setQuery] = useState('');
   const [type, setType] = useState('all'); // 'all' | 'movie' | 'tv'
+  const [isSearching, setIsSearching] = useState(false); // Track if we're in search mode
+  const [searchResults, setSearchResults] = useState(null);
+  
+  const debounceTimer = useRef(null);
 
-  // Fetch data whenever page or type changes
+  // Auto-search with debounce when query changes
   useEffect(() => {
+    // Clear previous timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    // If query is empty, reset to discover mode
+    if (!query.trim()) {
+      setIsSearching(false);
+      setSearchResults(null);
+      setPage(1);
+      return;
+    }
+
+    // Debounce the search call
+    debounceTimer.current = setTimeout(async () => {
+      setLoading(true);
+      setErr(null);
+      setPage(1);
+      
+      try {
+        const searchType = type === 'all' ? 'multi' : type;
+        const results = await tmdb.search(query, 1, searchType, {
+          allowAdult: prefs.allowAdult,
+          language: prefs.language,
+        });
+        
+        setSearchResults(results);
+        setIsSearching(true);
+      } catch (e) {
+        console.error(e);
+        setErr(e.message || 'Search failed');
+      } finally {
+        setLoading(false);
+      }
+    }, 500); // 500ms debounce delay
+
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [query, type, prefs]);
+
+  // Fetch discover data whenever page or type changes (only for discover mode)
+  useEffect(() => {
+    if (isSearching) return; // Skip discover fetch when searching
+    
     async function load() {
       setLoading(true);
       setErr(null);
@@ -35,7 +87,7 @@ export default function Discover() {
 
         if (type === 'all' || type === 'tv') {
           promises.push(
-            tmdb.discover('tv', page, { sort_by: 'popularity.desc' }).then((res) => ({
+            tmdb.discover('tv', page, { sort_by: 'popularity.desc', allowAdult: prefs.allowAdult, language: prefs.language }).then((res) => ({
               kind: 'tv',
               data: res,
             }))
@@ -62,9 +114,9 @@ export default function Discover() {
     }
 
     load();
-  }, [page, type]);
+  }, [page, type, isSearching, prefs]);
 
-  // Combine + search filter
+  // Combine discover results (only used when not searching)
   const combined = useMemo(() => {
     let items = [];
 
@@ -86,41 +138,48 @@ export default function Discover() {
       );
     }
 
-    if (query.trim()) {
-      const qLower = query.trim().toLowerCase();
-      items = items.filter((item) => {
-        const title = (item.title || item.name || '').toLowerCase();
-        return title.includes(qLower);
-      });
-    }
-
     items.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
     return items;
-  }, [rawMovie, rawTv, query]);
+  }, [rawMovie, rawTv]);
 
   const maxPages = useMemo(() => {
+    if (isSearching && searchResults) {
+      return searchResults.total_pages || 1;
+    }
     const moviePages = rawMovie?.total_pages || Infinity;
     const tvPages = rawTv?.total_pages || Infinity;
     const p = Math.max(1, Math.min(moviePages, tvPages));
     return Number.isFinite(p) ? p : 1;
-  }, [rawMovie, rawTv]);
+  }, [rawMovie, rawTv, searchResults, isSearching]);
 
-  function handleSearchSubmit(e) {
-    e.preventDefault();
-  }
+  // Get current items to display
+  const displayItems = useMemo(() => {
+    if (isSearching && searchResults?.results) {
+      return searchResults.results.map((r) => ({
+        ...r,
+        media_type: r.media_type || 'movie',
+      }));
+    }
+    return combined;
+  }, [isSearching, searchResults, combined]);
 
   function handleTypeChange(e) {
     setPage(1);
     setType(e.target.value);
+    // Reset search when type changes
+    if (isSearching) {
+      setIsSearching(false);
+      setSearchResults(null);
+    }
   }
 
   return (
     <div className="container">
       {/* Controls bar: search + type inline */}
-      <form onSubmit={handleSearchSubmit} className="discover-controls">
+      <form onSubmit={(e) => e.preventDefault()} className="discover-controls">
         <input
           className="input discover-search-input"
-          placeholder="Search..."
+          placeholder="Search ..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -141,10 +200,11 @@ export default function Discover() {
       {!loading && !err && (
         <>
           <div style={{ marginBottom: 8, fontSize: 13, color: 'var(--muted)' }}>
-            Showing <strong>{combined.length}</strong> items — page {page} / {maxPages}
+            Showing <strong>{displayItems.length}</strong> items — page {page} / {maxPages}
+            {isSearching && query && ` (searching for "${query}")`}
           </div>
 
-          <MovieGrid items={combined} />
+          <MovieGrid items={displayItems} />
 
           <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
             <button

@@ -9,7 +9,9 @@ import Login from '../pages/Auth/Login';
 import Signup from '../pages/Auth/Signup';
 import Favourites from '../pages/Favourites';
 import Profile from '../pages/Profile';
-import { useAuth } from '../hooks/useAuth';
+import useAuth from '../hooks/useAuth';
+import Lists from '../pages/Lists';
+import ListDetails from '../pages/ListDetails';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -46,6 +48,8 @@ export default function AppRouter() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/lists" element={<Lists />} />
+      <Route path="/lists/:listId" element={<ListDetails />} />
     </Routes>
   );
 }

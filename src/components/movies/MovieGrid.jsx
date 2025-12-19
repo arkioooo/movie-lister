@@ -14,6 +14,7 @@ export default function MovieGrid({ items }) {
       ))}
     </div>
   );
+
 }
 
 const gridStyle = {

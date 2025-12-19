@@ -15,6 +15,7 @@ export default function Search() {
   const { prefs } = useUserPreferences();
 
 
+
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!q || q.trim().length === 0) {
@@ -31,7 +32,7 @@ export default function Search() {
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [q, type, page]);
+  }, [q, type, page, prefs.allowAdult, prefs.language]);
 
   function onSubmit(e) {
     e.preventDefault();
@@ -64,7 +65,7 @@ export default function Search() {
           </select>
         </div>
 
-        <button type="submit" className="btn btn-primary btn-small">
+        <button type="submit" className="btn btn-primary btn-small" style={{padding: '1em'}}>
           Search
         </button>
       </form>

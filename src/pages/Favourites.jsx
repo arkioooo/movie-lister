@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { getFavourites } from '../api/firestore';
 import MovieGrid from '../components/movies/MovieGrid';
+import { Link } from 'react-router-dom';
 
 export default function Favourites() {
   const { user, loading } = useAuth();
@@ -33,11 +34,13 @@ export default function Favourites() {
     return () => { mounted = false; };
   }, [user]);
 
+
+
   if (loading) return <div style={{ padding: 20 }}>Checking authentication...</div>;
-  if (!user) return <div style={{ padding: 20 }}>Please <a href="/login">log in</a> to see your favourites.</div>;
+  if (!user) return <div style={{ padding: 20 }}>Please <Link to="/login">log in</Link> to see your favourites.</div>;
 
   return (
-    <div style={{ maxWidth: 1100, margin: '1.5rem auto' }}>
+    <div className='container'>
       <h2>Your favourites</h2>
       {busy && <div>Loading...</div>}
       {err && <div style={{ color: 'red' }}>{err}</div>}

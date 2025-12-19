@@ -118,6 +118,7 @@ export default function Profile() {
           <h2>Account</h2>
           <button
             className="btn btn-primary btn-small"
+            style={{ width: 'fit-content', padding: '0.5em'}}
             onClick={handleSave}
             disabled={!hasChanges || saving}
           >
@@ -140,7 +141,7 @@ export default function Profile() {
               </div>
             )}
 
-            <label className="btn btn-secondary btn-small">
+            <label className="btn btn-secondary btn-small"  style={{padding: '0.5em'}}>
               {avatarUploading ? 'Uploading…' : 'Change avatar'}
               <input
                 type="file"
@@ -172,6 +173,7 @@ export default function Profile() {
 
             <button
               className="btn btn-secondary btn-small"
+              style={{ width: 'fit-content', padding: '0.5em'}}
               onClick={() => setShowPasswordModal(true)}
             >
               Change password

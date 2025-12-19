@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import tmdb from '../api/tmdb';
 import MovieGrid from '../components/movies/MovieGrid';
 import AddToFavButton from '../components/movies/AddToFavButton';
+import useAuth from '../hooks/useAuth';
 
 export default function MoviePage({ isTV = false }) {
   const { id } = useParams();
@@ -11,6 +12,8 @@ export default function MoviePage({ isTV = false }) {
   const [recommendations, setRecommendations] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
+
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!id) return;
@@ -35,6 +38,14 @@ export default function MoviePage({ isTV = false }) {
 
   const title = details.title || details.name;
   const poster = details.poster_path || details.backdrop_path;
+
+  function handleAddToList() {
+    if (!user) {
+      alert('Please sign in to add to a list.');
+      return;
+    }
+    alert(`Add "${title}" to list (coming soon)`);
+  }
 
   return (
     <div style={{ maxWidth: 1000, margin: '1.5rem auto' }}>
@@ -61,6 +72,11 @@ export default function MoviePage({ isTV = false }) {
               title={title}
               posterPath={details.poster_path || details.backdrop_path || null}
             />
+            {user && (
+              <button className="btn btn-secondary btn-small" onClick={handleAddToList}>
+                Add to list
+              </button>
+            )}
             <div style={{ marginLeft: 12 }}>
               <strong>Rating:</strong> {details.vote_average} ({details.vote_count} votes)
             </div>

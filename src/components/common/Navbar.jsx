@@ -12,7 +12,7 @@ export default function Navbar() {
         <Link to="/">TMDB App</Link>
       </div>
       <div className="nav-links">
-        <Link to="/search">Search</Link>
+        <Link to="/lists">Your Lists</Link>
         {user && <Link to="/favourites">Favourites</Link>}
       </div>
     </nav>
