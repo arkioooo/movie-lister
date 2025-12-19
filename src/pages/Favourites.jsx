@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { getFavourites } from '../api/firestore';
 import MovieGrid from '../components/movies/MovieGrid';
+import Modal from '../components/common/Modal';
+import AddToListModal from '../components/lists/AddToListModal';
 import { Link } from 'react-router-dom';
 
 export default function Favourites() {
@@ -10,6 +12,7 @@ export default function Favourites() {
   const [favs, setFavs] = useState([]);
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [addItem, setAddItem] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -45,7 +48,23 @@ export default function Favourites() {
       {busy && <div>Loading...</div>}
       {err && <div style={{ color: 'red' }}>{err}</div>}
       {!busy && favs.length === 0 && <div>You have no favourites yet — add some from a movie or TV page.</div>}
-      {!busy && favs.length > 0 && <MovieGrid items={favs} />}
+      {!busy && favs.length > 0 && (
+        <>
+          <MovieGrid
+            items={favs}
+            onAddToList={(item) => setAddItem(item)}
+          />
+
+          {addItem && (
+            <Modal onClose={() => setAddItem(null)}>
+              <AddToListModal
+                item={addItem}
+                onClose={() => setAddItem(null)}
+              />
+            </Modal>
+          )}
+        </>
+      )}
     </div>
   );
 }

@@ -95,14 +95,24 @@ export async function deleteList(uid, listId) {
 
 export async function addItemToList(uid, listId, item) {
   if (!uid) throw new Error('uid required');
-  const itemsCol = collection(db, 'users', uid, 'lists', listId, 'items');
-  const docRef = await addDoc(itemsCol, {
+
+  const itemRef = doc(
+    db,
+    'users',
+    uid,
+    'lists',
+    listId,
+    'items',
+    String(item.tmdbId)
+  );
+
+  await setDoc(itemRef, {
     tmdbId: item.tmdbId,
-    note: item.note || null,
-    position: typeof item.position === 'number' ? item.position : null,
+    title: item.title || null,
+    type: item.type || null,
+    posterPath: item.posterPath || null,
     addedAt: serverTimestamp(),
-  });
-  return docRef.id;
+  }, { merge: true });
 }
 
 export async function getListItems(uid, listId) {

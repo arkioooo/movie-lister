@@ -499,6 +499,20 @@ a {
   text-decoration: underline;
 }
 
+.lists-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.list-card {
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--surface);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 /* --- Buttons --- */
 .btn {
   display: inline-flex;

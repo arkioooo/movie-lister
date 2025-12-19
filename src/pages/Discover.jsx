@@ -2,6 +2,8 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import tmdb from '../api/tmdb';
 import MovieGrid from '../components/movies/MovieGrid';
+import Modal from '../components/common/Modal';
+import AddToListModal from '../components/lists/AddToListModal';
 import useUserPreferences from '../hooks/useUserPreferences';
 
 
@@ -12,6 +14,7 @@ export default function Discover() {
   const [rawMovie, setRawMovie] = useState(null);
   const [rawTv, setRawTv] = useState(null);
   const { prefs } = useUserPreferences();
+  const [addItem, setAddItem] = useState(null);
   
   // Filters
   const [query, setQuery] = useState('');
@@ -204,7 +207,20 @@ export default function Discover() {
             {isSearching && query && ` (searching for "${query}")`}
           </div>
 
-          <MovieGrid items={displayItems} />
+          <MovieGrid
+            items={displayItems}
+            onAddToList={(item) => setAddItem(item)}
+          />
+
+          {addItem && (
+            <Modal onClose={() => setAddItem(null)}>
+              <AddToListModal
+                item={addItem}
+                onClose={() => setAddItem(null)}
+              />
+            </Modal>
+          )}
+
 
           <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
             <button
