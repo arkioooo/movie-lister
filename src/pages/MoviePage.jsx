@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import tmdb from '../api/tmdb';
 import MovieGrid from '../components/movies/MovieGrid';
 import AddToFavButton from '../components/movies/AddToFavButton';
+import Modal from '../components/common/Modal';
+import AddToListModal from '../components/lists/AddToListModal';
 import useAuth from '../hooks/useAuth';
 
 export default function MoviePage({ isTV = false }) {
@@ -14,6 +16,7 @@ export default function MoviePage({ isTV = false }) {
   const [err, setErr] = useState(null);
 
   const { user } = useAuth();
+  const [addItem, setAddItem] = useState(null);
 
   useEffect(() => {
     if (!id) return;
@@ -44,8 +47,15 @@ export default function MoviePage({ isTV = false }) {
       alert('Please sign in to add to a list.');
       return;
     }
-    alert(`Add "${title}" to list (coming soon)`);
+
+    setAddItem({
+      tmdbId: String(id),
+      type: 'movie',
+      title: title,
+      posterPath: details.poster_path || details.backdrop_path || null,
+    });
   }
+
 
   return (
     <div style={{ maxWidth: 1000, margin: '1.5rem auto' }}>
@@ -73,9 +83,11 @@ export default function MoviePage({ isTV = false }) {
               posterPath={details.poster_path || details.backdrop_path || null}
             />
             {user && (
-              <button className="btn btn-secondary btn-small" onClick={handleAddToList}>
-                Add to list
-              </button>
+              <>
+                <button className="btn btn-secondary btn-small" onClick={handleAddToList}>
+                  Add to list
+                </button>
+              </>
             )}
             <div style={{ marginLeft: 12 }}>
               <strong>Rating:</strong> {details.vote_average} ({details.vote_count} votes)
@@ -94,6 +106,12 @@ export default function MoviePage({ isTV = false }) {
           <MovieGrid items={recommendations.slice(0, 12)} />
         </section>
       )}
+
+                {addItem && (
+                  <Modal open onClose={() => setAddItem(null)}>
+                    <AddToListModal item={addItem} onClose={() => setAddItem(null)} />
+                  </Modal>
+                )}
     </div>
   );
 }

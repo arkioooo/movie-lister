@@ -14,6 +14,69 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { limit } from 'firebase/firestore';
+import tmdb from './tmdb';
+
+export async function getUserList(uid, listId) {
+  if (!uid) throw new Error('uid required');
+  const ref = doc(db, 'users', uid, 'lists', listId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() };
+}
+
+export async function getListPreviewItems(uid, listId, limitCount = 2) {
+  if (!uid) throw new Error('uid required');
+
+  const itemsRef = collection(
+    db,
+    'users',
+    uid,
+    'lists',
+    listId,
+    'items'
+  );
+
+  const q = query(itemsRef, orderBy('position'), limit(limitCount));
+  const snap = await getDocs(q);
+
+  const items = [];
+
+  for (const docSnap of snap.docs) {
+    const data = docSnap.data();
+
+    if (!data.title) {
+      // resolve title from TMDB
+      let details;
+      try {
+        if (data.type === 'movie' || data.type === 'tv') {
+          details = await tmdb.getDetails(data.type, data.tmdbId);
+        } else {
+          try {
+            details = await tmdb.getDetails('movie', data.tmdbId);
+          } catch {
+            details = await tmdb.getDetails('tv', data.tmdbId);
+          }
+        }
+
+        data.title = details.title || details.name || 'Untitled';
+
+        // 🔒 cache back into Firestore
+        await updateDoc(
+          doc(db, 'users', uid, 'lists', listId, 'items', docSnap.id),
+          { title: data.title }
+        );
+      } catch {
+        data.title = 'Untitled';
+      }
+    }
+
+    items.push(data);
+  }
+
+  return items;
+}
+
 
 /**
  * Ensure a minimal user document exists for a signed in user.
@@ -58,6 +121,12 @@ export async function addFavourite(uid, fav) {
   });
 }
 
+export async function removeItemFromList(uid, listId, itemId) {
+  if (!uid) throw new Error('uid required');
+  const ref = doc(db, 'users', uid, 'lists', listId, 'items', String(itemId));
+  await deleteDoc(ref);
+}
+
 export async function removeFavourite(uid, tmdbId) {
   if (!uid) throw new Error('uid required');
   const favRef = doc(db, 'users', uid, 'favourites', String(tmdbId));
@@ -93,24 +162,15 @@ export async function deleteList(uid, listId) {
   await deleteDoc(listRef);
 }
 
-export async function addItemToList(uid, listId, item) {
-  if (!uid) throw new Error('uid required');
+export async function addItemToList(uid, listId, item, position = 0) {
+  const ref = doc(db, 'users', uid, 'lists', listId, 'items', String(item.tmdbId));
 
-  const itemRef = doc(
-    db,
-    'users',
-    uid,
-    'lists',
-    listId,
-    'items',
-    String(item.tmdbId)
-  );
-
-  await setDoc(itemRef, {
+  await setDoc(ref, {
     tmdbId: item.tmdbId,
     title: item.title || null,
     type: item.type || null,
     posterPath: item.posterPath || null,
+    position,
     addedAt: serverTimestamp(),
   }, { merge: true });
 }

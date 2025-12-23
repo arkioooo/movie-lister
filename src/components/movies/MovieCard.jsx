@@ -5,7 +5,7 @@ import tmdb from '../../api/tmdb';
 import useAuth from '../../hooks/useAuth';
 
 
-export default function MovieCard({ item }) {
+export default function MovieCard({ item, onRemoveFromList }) {
   // TMDB search/multi returns different keys: title/name, poster_path, media_type
   const id = item.id || item.tmdbId;
   const type = item.media_type || (item.title ? 'movie' : 'tv');
@@ -32,12 +32,20 @@ export default function MovieCard({ item }) {
         <div>
           <div style={{ fontWeight: 600, fontSize: 14, lineHeight: '1.2em' }}>{title}</div>
           <div style={{ fontSize: 12, color: '#666', marginTop: 6 }}>
-            {item.release_date || item.first_air_date || 'Unknown'}
+            {item.release_date || item.first_air_date}
           </div>
         </div>
       </Link>
 
       {/* Add-to-list moved to MoviePage; button intentionally omitted here */}
+      {onRemoveFromList && (
+        <button
+          className="btn btn-secondary btn-small"
+          onClick={() => onRemoveFromList(item)}
+        >
+          Remove
+        </button>
+      )}
     </div>
   );
 }

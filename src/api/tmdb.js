@@ -102,6 +102,14 @@ export async function getDetails(
   return res.data;
 }
 
+export async function getRating(type, id) {
+  const res = await client.get(`/${type}/${id}`);
+  return {
+    title: res.data.title || res.data.name,
+    rating: res.data.vote_average,
+  };
+}
+
 export default {
   search,
   discover,

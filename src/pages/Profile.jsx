@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getUserProfile, updateUserProfile } from '../api/firestore';
+import { getUserProfile, updateUserProfile, getUserLists } from '../api/firestore';
 import { uploadUserAvatar } from '../api/storage';
 import useAuth from '../hooks/useAuth';
 import Modal from '../components/common/Modal';
@@ -13,6 +13,7 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [recentLists, setRecentLists] = useState([]); 
 
   const [initialUsername, setInitialUsername] = useState('');
   const [username, setUsername] = useState('');
@@ -22,6 +23,26 @@ export default function Profile() {
     language: 'en-US',
     photoURL: null,
   });
+
+  useEffect(() => {
+    if (!user) return;
+    let mounted = true;
+    async function loadLists() {
+      try {
+        const all = await getUserLists(user.uid);
+        const sorted = (all || [])
+          .filter(l => l.createdAt)
+          .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+          .slice(0, 2);
+        if (mounted) setRecentLists(sorted);
+      } catch (err) {
+        console.error('Failed to load lists', err);
+      }
+    }
+
+    loadLists();
+    return () => { mounted = false; };
+  }, [user]);
 
   useEffect(() => {
     async function loadProfile() {
@@ -238,16 +259,39 @@ export default function Profile() {
         </div>
       </section>
 
-      {/* ===== Lists placeholder ===== */}
+      {/* ===== Lists ===== */}
       <section className="profile-card">
-        <h2>Your lists</h2>
-        <div className="profile-lists-placeholder">
-          <p>You haven’t created any lists yet.</p>
-          <button className="btn btn-secondary" disabled>
-            Create list
-          </button>
+        <div className="profile-card-header">
+          <h2>Your lists</h2>
+          <Link to="/lists" className="text-link">
+            View all
+          </Link>
         </div>
+
+        {recentLists.length === 0 && (
+          <p className="muted">
+            You haven’t created any lists yet.
+          </p>
+        )}
+
+        {recentLists.length > 0 && (
+          <div className="profile-lists-preview">
+            {recentLists.map((list) => (
+              <Link
+                key={list.id}
+                to={`/lists/${list.id}`}
+                className="list-preview-card"
+              >
+                <h4>{list.name}</h4>
+                {list.description && (
+                  <p className="muted">{list.description}</p>
+                )}
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
+
 
       {/* ===== Change Password Modal ===== */}
       <Modal
