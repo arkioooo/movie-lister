@@ -47,7 +47,13 @@ export default function Favourites() {
       <h2>Your favourites</h2>
       {busy && <div>Loading...</div>}
       {err && <div style={{ color: 'red' }}>{err}</div>}
-      {!busy && favs.length === 0 && <div>You have no favourites yet — add some from a movie or TV page.</div>}
+      {!busy && favs.length === 0 && <div className="empty-state">
+          <h3>No favourites yet</h3>
+          <p className="muted">
+            Tap the heart icon on any movie or TV show to save it here.
+          </p>
+        </div>
+      }
       {!busy && favs.length > 0 && (
         <>
           <MovieGrid

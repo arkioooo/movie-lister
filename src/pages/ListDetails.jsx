@@ -1,30 +1,39 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
-import { getListItems, removeItemFromList, getUserList } from '../api/firestore';
-import SortableListItemRow from '../components/lists/SortableListItemRow';
-import Modal from '../components/common/Modal';
-import ConfirmModal from '../components/common/ConfirmModal';
-import Toast from '../components/common/Toast'; // ADD THIS IMPORT
+import {
+  getListItems,
+  removeItemFromList,
+  getUserList,
+} from '../api/firestore';
 
 import {
   DndContext,
   closestCenter,
 } from '@dnd-kit/core';
-
 import {
   SortableContext,
   verticalListSortingStrategy,
+  arrayMove,
 } from '@dnd-kit/sortable';
 
 import { updateDoc, doc } from 'firebase/firestore';
 import { db } from '../api/firebase';
 
+import Modal from '../components/common/Modal';
+import ConfirmModal from '../components/common/ConfirmModal';
+import Toast from '../components/common/Toast';
+import Skeleton from '../components/common/Skeleton';
+import SortableListItemRow from '../components/lists/SortableListItemRow';
+
 export default function ListDetails() {
   const { listId } = useParams();
   const { user } = useAuth();
-  const [items, setItems] = useState([]);
+
   const [listMeta, setListMeta] = useState(null);
+  const [items, setItems] = useState([]);
+  const [loadingItems, setLoadingItems] = useState(true);
+
   const [confirmItem, setConfirmItem] = useState(null);
   const [toast, setToast] = useState(null);
 
@@ -32,42 +41,46 @@ export default function ListDetails() {
     if (!user) return;
 
     async function load() {
-      const [itemsData, meta] = await Promise.all([
-        getListItems(user.uid, listId),
+      setLoadingItems(true);
+
+      const [meta, data] = await Promise.all([
         getUserList(user.uid, listId),
+        getListItems(user.uid, listId),
       ]);
 
-      setItems(itemsData);
       setListMeta(meta);
+      setItems(data);
+      setLoadingItems(false);
     }
 
     load();
   }, [user, listId]);
 
-  async function handleRemove(item) {
-    setConfirmItem(item);
+  if (!user) {
+    return <div className="container">Please log in.</div>;
   }
 
-  async function handleDragEnd(event) {
+  function handleDragEnd(event) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
     setItems((prev) => {
-      const oldIndex = prev.findIndex(i => i.tmdbId == active.id);
-      const newIndex = prev.findIndex(i => i.tmdbId == over.id);
+      const oldIndex = prev.findIndex(i => i.tmdbId === active.id);
+      const newIndex = prev.findIndex(i => i.tmdbId === over.id);
 
-      if (oldIndex < 0 || newIndex < 0) return prev;
-
-      const reordered = (() => {
-        const arr = prev.slice();
-        const [moved] = arr.splice(oldIndex, 1);
-        arr.splice(newIndex, 0, moved);
-        return arr;
-      })();
+      const reordered = arrayMove(prev, oldIndex, newIndex);
 
       reordered.forEach((item, index) => {
         updateDoc(
-          doc(db, 'users', user.uid, 'lists', listId, 'items', String(item.tmdbId)),
+          doc(
+            db,
+            'users',
+            user.uid,
+            'lists',
+            listId,
+            'items',
+            String(item.tmdbId)
+          ),
           { position: index }
         ).catch(console.error);
       });
@@ -76,20 +89,41 @@ export default function ListDetails() {
     });
   }
 
-  if (!user) return <div className="container">Please log in.</div>;
-
   return (
-    <>
-      <div className="container">
+    <div className="container">
+      {/* ===== Header ===== */}
+      <div className="page-header">
         <h1>{listMeta?.name || 'List'}</h1>
-        {listMeta?.description && (
-          <p className="muted">{listMeta.description}</p>
-        )}
+      </div>
 
-        {items.length === 0 && (
-          <p>The list is empty. Go to Discover to add items to this list.</p>
-        )}
+      {listMeta?.description && (
+        <p className="muted">{listMeta.description}</p>
+      )}
 
+      {/* ===== Skeletons ===== */}
+      {loadingItems && (
+        <>
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="list-item-row">
+              <Skeleton width="55%" />
+              <Skeleton width={60} height={28} radius={14} />
+            </div>
+          ))}
+        </>
+      )}
+
+      {/* ===== Empty State ===== */}
+      {!loadingItems && items.length === 0 && (
+        <div className="empty-state">
+          <h3>This list is empty</h3>
+          <p className="muted">
+            Add movies or TV shows from their detail pages.
+          </p>
+        </div>
+      )}
+
+      {/* ===== Items ===== */}
+      {!loadingItems && items.length > 0 && (
         <DndContext
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
@@ -102,14 +136,14 @@ export default function ListDetails() {
               <SortableListItemRow
                 key={item.tmdbId}
                 item={item}
-                onRemove={() => handleRemove(item)}
+                onRemove={() => setConfirmItem(item)}
               />
             ))}
           </SortableContext>
         </DndContext>
-      </div>
+      )}
 
-      {/* ===== Confirm Remove Item Modal ===== */}
+      {/* ===== Remove Confirmation ===== */}
       {confirmItem && (
         <Modal open onClose={() => setConfirmItem(null)}>
           <ConfirmModal
@@ -122,31 +156,28 @@ export default function ListDetails() {
               const removed = confirmItem;
               setConfirmItem(null);
 
-              // optimistic UI
               setItems(prev =>
                 prev.filter(i => i.tmdbId !== removed.tmdbId)
               );
 
-              try {
-                await removeItemFromList(user.uid, listId, removed.tmdbId);
-                setToast({
-                  message: 'Item removed from list',
-                  actionLabel: 'Undo',
-                  action: async () => {
-                    setItems(prev => [...prev, removed]);
-                  },
-                });
-              } catch (error) {
-                // restore on failure
-                setItems(prev => [...prev, removed]);
-                console.error('Failed to remove item:', error);
-              }
+              await removeItemFromList(
+                user.uid,
+                listId,
+                removed.tmdbId
+              );
+
+              setToast({
+                message: 'Item removed from list',
+                actionLabel: 'Undo',
+                action: () =>
+                  setItems(prev => [...prev, removed]),
+              });
             }}
           />
         </Modal>
       )}
 
-      {/* ===== Toast Notification ===== */}
+      {/* ===== Undo Toast ===== */}
       {toast && (
         <Toast
           message={toast.message}
@@ -155,6 +186,6 @@ export default function ListDetails() {
           onClose={() => setToast(null)}
         />
       )}
-    </>
+    </div>
   );
 }

@@ -29,9 +29,9 @@ export default function TVPage() {
     tmdb.getDetails(type, id)
       .then((data) => {
         setDetails(data);
-        const recs =
-          (data.recommendations && data.recommendations.results) || [];
-        setRecommendations(recs);
+        setRecommendations(
+          (data.recommendations && data.recommendations.results) || []
+        );
       })
       .catch((e) => {
         setErr(e.message || 'Failed to load details');
@@ -55,8 +55,8 @@ export default function TVPage() {
     setAddItem({
       tmdbId: String(id),
       type: 'tv',
-      title: title,
-      posterPath: details.poster_path || details.backdrop_path || null,
+      title,
+      posterPath: poster || null,
     });
   }
 
@@ -103,9 +103,7 @@ export default function TVPage() {
               tmdbId={id}
               type="tv"
               title={title}
-              posterPath={
-                details.poster_path || details.backdrop_path || null
-              }
+              posterPath={poster || null}
             />
 
             {user && (
@@ -135,7 +133,7 @@ export default function TVPage() {
         </div>
       </div>
 
-      {recommendations && recommendations.length > 0 && (
+      {recommendations.length > 0 && (
         <section style={{ marginTop: 28 }}>
           <h3>Recommendations</h3>
           <MovieGrid items={recommendations.slice(0, 12)} />

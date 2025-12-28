@@ -5,6 +5,7 @@ import Home from '../pages/Home';
 import Discover from '../pages/Discover';
 import Search from '../pages/Search';
 import MoviePage from '../pages/MoviePage';
+import TVPage from '../pages/TVPage';
 import Login from '../pages/Auth/Login';
 import Signup from '../pages/Auth/Signup';
 import Favourites from '../pages/Favourites';
@@ -26,7 +27,7 @@ export default function AppRouter() {
       <Route path="/discover" element={<Discover />} />
       <Route path="/search" element={<Search />} />
       <Route path="/movie/:id" element={<MoviePage isTV={false} />} />
-      <Route path="/tv/:id" element={<MoviePage isTV={true} />} />
+      <Route path="/tv/:id" element={<TVPage isTV={true} />} />
 
       <Route
         path="/profile"
