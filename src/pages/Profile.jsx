@@ -259,40 +259,6 @@ export default function Profile() {
         </div>
       </section>
 
-      {/* ===== Lists ===== */}
-      <section className="profile-card">
-        <div className="profile-card-header">
-          <h2>Your lists</h2>
-          <Link to="/lists" className="text-link">
-            View all
-          </Link>
-        </div>
-
-        {recentLists.length === 0 && (
-          <p className="muted">
-            You haven’t created any lists yet.
-          </p>
-        )}
-
-        {recentLists.length > 0 && (
-          <div className="profile-lists-preview">
-            {recentLists.map((list) => (
-              <Link
-                key={list.id}
-                to={`/lists/${list.id}`}
-                className="list-preview-card"
-              >
-                <h4>{list.name}</h4>
-                {list.description && (
-                  <p className="muted">{list.description}</p>
-                )}
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
-
-
       {/* ===== Change Password Modal ===== */}
       <Modal
         open={showPasswordModal}

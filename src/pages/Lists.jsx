@@ -5,12 +5,16 @@ import useAuth from '../hooks/useAuth';
 import { getUserLists, deleteList, getListPreviewItems } from '../api/firestore';
 import Modal from '../components/common/Modal';
 import CreateListModal from '../components/lists/CreateListModal';
+import ConfirmModal from '../components/common/ConfirmModal';
+import Toast from '../components/common/Toast'; // ADD THIS IMPORT
 
 export default function Lists() {
   const { user, loading } = useAuth();
   const [lists, setLists] = useState([]);
   const [previews, setPreviews] = useState({});
+  const [confirm, setConfirm] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -23,21 +27,19 @@ export default function Lists() {
         .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
 
       setLists(sorted);
-      const previewMap = {};
 
+      const previewMap = {};
       await Promise.all(
         sorted.map(async (list) => {
           const items = await getListPreviewItems(user.uid, list.id, 2);
           previewMap[list.id] = items;
         })
       );
-
       setPreviews(previewMap);
     }
 
     load();
   }, [user]);
-
 
   if (loading) return <div className="container">Loading…</div>;
   if (!user) return <div className="container">Please log in.</div>;
@@ -45,70 +47,116 @@ export default function Lists() {
   const recentLists = lists.slice(0, 2);
 
   return (
-    <div className="container">
-      {/* ===== Page Header ===== */}
-      <div className="page-header">
-        <h1>My Lists</h1>
-        <button
-          className="btn btn-primary"
-          onClick={() => setShowCreate(true)}
-        >
-          Create list
-        </button>
+    <>
+      <div className="container">
+        {/* ===== Page Header ===== */}
+        <div className="page-header">
+          <h1>My Lists</h1>
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowCreate(true)}
+          >
+            Create list
+          </button>
+        </div>
+
+        {/* ===== Create List Modal ===== */}
+        <Modal open={showCreate} onClose={() => setShowCreate(false)}>
+          <CreateListModal
+            onCreated={(list) =>
+              setLists((prev) =>
+                [list, ...prev].sort(
+                  (a, b) => b.createdAt.seconds - a.createdAt.seconds
+                )
+              )
+            }
+            onClose={() => setShowCreate(false)}
+          />
+        </Modal>
+
+        {lists.length === 0 && (
+          <p className="muted">You haven't created any lists yet.</p>
+        )}
+
+        <div className="lists-grid">
+          {lists.map((list) => {
+            const items = previews[list.id] || [];
+
+            return (
+              <div key={list.id} className="list-card">
+                <Link to={`/lists/${list.id}`} className="list-card-main">
+                  <h3>{list.name}</h3>
+
+                  {items.length > 0 ? (
+                    <ul className="list-preview-items">
+                      {items.map((item, idx) => (
+                        <li key={idx}>
+                          {item.title || 'Untitled'}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="muted">No items yet</p>
+                  )}
+                </Link>
+
+                <button
+                  className="btn btn-secondary btn-small"
+                  onClick={() => setConfirm(list)}
+                >
+                  Delete
+                </button>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* ===== Create List Modal ===== */}
-      <Modal open={showCreate} onClose={() => setShowCreate(false)}>
-        <CreateListModal
-          onCreated={(list) =>
-            setLists((prev) =>
-              [list, ...prev].sort(
-                (a, b) => b.createdAt.seconds - a.createdAt.seconds
-              )
-            )
-          }
-          onClose={() => setShowCreate(false)}
-        />
-      </Modal>
-      {lists.length === 0 && (
-        <p className="muted">You haven’t created any lists yet.</p>
+      {/* ===== Confirm Delete Modal ===== */}
+      {confirm && (
+        <Modal open onClose={() => setConfirm(null)}>
+          <ConfirmModal
+            title="Delete list?"
+            message={`"${confirm.name}" will be permanently deleted.`}
+            danger
+            confirmText="Delete list"
+            onCancel={() => setConfirm(null)}
+            onConfirm={async () => {
+              const deleted = confirm;
+              setConfirm(null);
+
+              // optimistic UI
+              setLists(prev => prev.filter(l => l.id !== deleted.id));
+
+              try {
+                await deleteList(user.uid, deleted.id);
+                setToast({
+                  message: `List "${deleted.name}" deleted`,
+                  actionLabel: 'Undo',
+                  action: async () => {
+                    // restore list
+                    setLists(prev => [deleted, ...prev]);
+                  },
+                });
+              } catch (error) {
+                // handle error - restore list on failure
+                setLists(prev => [deleted, ...prev]);
+                console.error('Failed to delete list:', error);
+              }
+            }}
+          />
+        </Modal>
       )}
 
-      <div className="lists-grid">
-        {lists.map((list) => {
-          const items = previews[list.id] || [];
-
-          return (
-            <div key={list.id} className="list-card">
-              <Link to={`/lists/${list.id}`} className="list-card-main">
-                <h3>{list.name}</h3>
-
-                {items.length > 0 ? (
-                  <ul className="list-preview-items">
-                    {items.map((item, idx) => (
-                      <li key={idx}>
-                        {item.title || 'Untitled'}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="muted">No items yet</p>
-                )}
-              </Link>
-
-              <button
-                className="btn btn-secondary btn-small"
-                onClick={async () => {
-                  await deleteList(user.uid, list.id);
-                  setLists(prev => prev.filter(x => x.id !== list.id));
-                }}
-              >
-                Delete
-              </button>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+      {/* ===== Toast Notification ===== */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          actionLabel={toast.actionLabel}
+          onAction={toast.action}
+          onClose={() => setToast(null)}
+        />
+      )}
+    </>
   );
 }
