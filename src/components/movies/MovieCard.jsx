@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import tmdb from '../../api/tmdb';
 
 export default function MovieCard({ item }) {
-  // ✅ ABSOLUTE GUARD (fixes your crash)
   if (!item) return null;
 
   const id = item.id || item.tmdbId;
